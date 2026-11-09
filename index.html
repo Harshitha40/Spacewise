@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LayoutLens — Photo to 3D room layout studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M8 22V12l8-5 8 5v10l-8 4z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"><svg viewBox="0 0 32 32"><path d="M8 22V12l8-5 8 5v10l-8 4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M8 12l8 5 8-5M16 17v9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></div>
+        <div><b>LayoutLens</b><small>Spatial layout studio</small></div>
+      </div>
+      <nav class="stepper" id="stepper">
+        <button data-step="upload"><i>1</i><span>Upload</span></button>
+        <button data-step="analyze"><i>2</i><span>Analyse</span></button>
+        <button data-step="dimensions"><i>3</i><span>Dimensions</span></button>
+        <button data-step="design"><i>4</i><span>Design &amp; optimise</span></button>
+      </nav>
+      <div class="top-actions">
+        <span class="engine-badge" id="engineBadge" title="Analysis engine"></span>
+        <button class="ghost" id="btnOpen" title="Open project">Open</button>
+        <button class="ghost" id="btnSave" title="Save project">Save</button>
+        <input type="file" id="fileOpen" accept=".json,application/json" hidden />
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- STEP 1 -->
+      <section class="step" id="step-upload">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">Photo → 3D → Better layout</span>
+            <h1>See your room <em>rearranged</em> before you move a thing.</h1>
+            <p>Upload a photo of your room. LayoutLens detects the furniture, rebuilds the room in 3D at true scale, flags collisions and blocked walkways, analyses daylight and sightlines, and proposes optimised layouts — then lets you walk through them or see them overlaid on your own photo.</p>
+            <div class="feature-pills">
+              <span>AI furniture detection</span><span>Collision &amp; walkway analysis</span><span>Daylight simulation</span><span>AR photo overlay</span><span>VR walkthrough</span>
+            </div>
+          </div>
+          <div class="drop-card">
+            <label class="dropzone" id="dropzone">
+              <input type="file" id="fileInput" accept="image/*" hidden />
+              <div class="dz-icon"><svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="17" cy="20" r="3.5" fill="currentColor"/><path d="M8 34l10-9 7 6 6-5 9 8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg></div>
+              <b>Drop a room photo here</b>
+              <span>or click to browse · JPG / PNG</span>
+              <small>Tip: stand in a doorway or corner so the back wall and floor are visible.</small>
+            </label>
+            <div class="or"><span>or start from a sample</span></div>
+            <div class="samples">
+              <button data-sample="bedroom"><b>Bedroom</b><small>4.2 × 3.8 m</small></button>
+              <button data-sample="living"><b>Living room</b><small>5.4 × 4.2 m</small></button>
+              <button data-sample="studio"><b>Studio flat</b><small>6.0 × 4.5 m</small></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="step" id="step-analyze">
+        <div class="analyze-grid">
+          <div class="photo-stage card"><div class="photo-wrap" id="analyzeWrap"><img id="analyzeImg" alt="Room photo" /><div id="boxes"></div><div class="scanline" id="scanline"></div></div></div>
+          <aside class="card side">
+            <h3>Scene analysis</h3>
+            <div class="status" id="analyzeStatus"><span class="spinner"></span><span>Preparing…</span></div>
+            <div class="roomtype" id="roomType"></div>
+            <div class="det-head"><b>Furniture <span class="muted" id="detCount"></span></b><button class="mini" id="drawBox" disabled>+ Draw a missing item</button></div>
+            <div class="det-list" id="detList"></div>
+            <p class="muted small">Wrong label? Pick the right type from the dropdown. Remove false detections with ×. To add something the detector missed, click <b>Draw a missing item</b>, drag a box around it on the photo, then choose its type. Detection runs entirely in your browser, and nothing is uploaded.</p>
+            <div class="row end"><button class="ghost" data-goto="upload">Back</button><button class="primary" id="toDims" disabled>Continue to dimensions →</button></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="step" id="step-dimensions">
+        <div class="dims-grid">
+          <div class="card col">
+            <div class="card-head"><h3>Room</h3>
+              <div class="seg small" id="unitSeg"><button data-units="imperial">ft / in</button><button data-units="metric">m / cm</button></div>
+            </div>
+            <div id="roomForm"></div>
+            <h4>Doors <button class="mini" id="addDoor">+ Add</button></h4>
+            <div id="doorList"></div>
+            <h4>Windows <button class="mini" id="addWindow">+ Add</button></h4>
+            <div id="windowList"></div>
+          </div>
+          <div class="card col grow">
+            <div class="card-head"><h3>Furniture <span class="muted" id="itemCount"></span></h3>
+              <div class="row"><select id="addType"></select><button class="mini" id="addItem">+ Add item</button></div>
+            </div>
+            <div id="itemCards" class="item-cards"></div>
+          </div>
+          <div class="card col calib-col">
+            <div class="card-head"><h3>Photo calibration <span class="tag">AR</span></h3></div>
+            <p class="muted small">Drag the 4 pins onto the floor in your photo. <b>A</b>/<b>B</b> = where the back wall meets the left/right walls. <b>C</b>/<b>D</b> = points on the right/left wall–floor edge, at the depth below. This recovers the camera so your new layout can be overlaid on the photo.</p>
+            <div class="calib-stage" id="calibStage"><img id="calibImg" alt="" /><canvas id="calibCanvas"></canvas></div>
+            <div class="row"><label class="field inline">Depth of C/D from back wall <input type="number" id="calibDepth" step="0.1" /> <span class="unit" id="calibDepthUnit"></span></label></div>
+            <div class="calib-status" id="calibStatus"></div>
+            <label class="check"><input type="checkbox" id="useDetPos" checked /> Place furniture where it appears in the photo</label>
+          </div>
+        </div>
+        <div class="dims-foot"><button class="ghost" data-goto="analyze">Back</button><div class="area-pill" id="areaPill"></div><button class="primary" id="toDesign">Build 3D room →</button></div>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="step" id="step-design">
+        <div class="design-grid">
+          <aside class="panel left">
+            <div class="panel-sec">
+              <h3>Catalog <small class="muted">drag into the room</small></h3>
+              <input class="search" id="catSearch" placeholder="Search furniture…" />
+              <div id="catalog" class="catalog"></div>
+            </div>
+            <div class="panel-sec grow">
+              <h3>In this room <small class="muted" id="roomItemsCount"></small></h3>
+              <div id="roomItems" class="room-items"></div>
+            </div>
+          </aside>
+
+          <div class="viewport-wrap">
+            <div class="vp-toolbar">
+              <div class="seg" id="viewSeg">
+                <button data-view="orbit" title="3D dollhouse (1)">3D</button>
+                <button data-view="plan" title="Top-down plan (2)">Plan</button>
+                <button data-view="walk" title="First-person VR walkthrough (3)">Walk</button>
+                <button data-view="ar" title="Overlay on your photo (4)">AR photo</button>
+              </div>
+              <div class="toggles" id="toggles">
+                <button data-t="collisions"><i class="dot red"></i>Collisions</button>
+                <button data-t="walkability"><i class="dot green"></i>Walkable</button>
+                <button data-t="paths"><i class="dot blue"></i>Paths</button>
+                <button data-t="clearance"><i class="dot sky"></i>Clearance</button>
+                <button data-t="sightlines"><i class="dot lime"></i>Sightlines</button>
+                <button data-t="daylight"><i class="dot amber"></i>Daylight</button>
+              </div>
+            </div>
+            <div class="viewport" id="viewport">
+              <div class="vp-float" id="vpFloat">
+                <button class="icon" id="btnUndo" title="Undo (Ctrl+Z)">↶</button>
+                <button class="icon" id="btnRedo" title="Redo (Ctrl+Y)">↷</button>
+                <button class="icon" id="btnShot" title="Save screenshot">⤓</button>
+              </div>
+              <div class="ar-photo" id="arPhoto"></div>
+              <div class="inspector hidden" id="inspector"></div>
+              <div class="walk-hud hidden" id="walkHud">
+                <div class="crosshair"></div>
+                <div class="hud-top">
+                  <div class="seg small" id="personaSeg"></div>
+                  <div class="seg small" id="stereoSeg"><button data-stereo="off">Mono</button><button data-stereo="anaglyph">Anaglyph 3D</button><button data-stereo="sbs">Side-by-side</button></div>
+                  <span id="xrSlot"></span>
+                </div>
+                <canvas class="minimap" id="minimap"></canvas>
+                <div class="hud-hint" id="walkHint">Click to look around · <b>WASD</b> move · <b>Shift</b> run · <b>Esc</b> release</div>
+              </div>
+              <div class="ar-hud hidden" id="arHud">
+                <label class="check"><input type="checkbox" id="arDiminish" checked /> Remove original furniture</label>
+                <label class="field inline">Compare <input type="range" id="arCompare" min="0" max="100" value="0" /></label>
+                <label class="field inline">Opacity <input type="range" id="arOpacity" min="20" max="100" value="100" /></label>
+              </div>
+              <div class="ar-empty hidden" id="arEmpty"><b>AR overlay needs a calibrated photo.</b><span>Upload a room photo and place the 4 calibration pins in the Dimensions step.</span><button class="primary" data-goto="dimensions">Calibrate now</button></div>
+              <div class="sun-bar" id="sunBar">
+                <span>☀</span><input type="range" id="sunHour" min="6" max="20" step="0.25" />
+                <span id="sunLabel"></span>
+                <select id="northSel" title="Which wall faces north?"><option value="N">Back wall faces N</option><option value="S">Front wall faces N</option><option value="E">Left wall faces N</option><option value="W">Right wall faces N</option></select>
+              </div>
+              <div class="kbd-hint" id="kbdHint">Drag to move · <b>R</b> rotate 90° · <b>Q/E</b> ±15° · <b>Del</b> remove · <b>Alt</b> free move</div>
+            </div>
+          </div>
+
+          <aside class="panel right">
+            <div class="panel-sec score-sec">
+              <div class="score-ring" id="scoreRing"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="track"/><circle cx="60" cy="60" r="52" class="bar" id="scoreArc"/></svg><div><b id="scoreVal">–</b><small>Layout score</small></div></div>
+              <div class="cat-bars" id="catBars"></div>
+            </div>
+            <div class="stats" id="stats"></div>
+            <div class="panel-sec grow">
+              <h3>Issues <small class="muted" id="issueCount"></small></h3>
+              <div id="issues" class="issues"></div>
+            </div>
+            <div class="panel-sec opt-sec">
+              <button class="primary wide glow" id="btnOptimize"><span>✦ Generate better layouts</span></button>
+              <div class="progress hidden" id="optProgress"><div></div></div>
+              <div class="opt-meta muted small" id="optMeta"></div>
+              <div id="suggestions" class="suggestions"></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div class="toasts" id="toasts"></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
